@@ -5,7 +5,6 @@ use std::fs::File;
 use std::string::String;
 use std::str::FromStr;
 use std::io::{self, Read};
-use proc_fs::ToPid;
 
 #[derive(Debug)]
 struct ProcStat {
@@ -94,6 +93,41 @@ pub fn process_statm(pid: String) -> io::Result<ProcStatm> {
     })
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProcIo {
+    rchar: usize, // bytes passed to read syscalls
+    wchar: usize, // bytes passed to write syscalls
+    syscr: usize, // read syscall count
+    syscw: usize, // write syscall count
+    read_bytes: usize, // Count of bytes read from storage layer
+    write_bytes: usize, // Count of bytes sent to storage layer
+    cancelled_write_bytes: usize, // count of bytes the process caused to not be written
+}
+
+pub fn process_io(pid: String) -> io::Result<ProcIo> {
+    let mut f = try!(File::open(format!("/proc/{}/io", pid)));
+    let mut stats_str = String::new();
+    let _n = f.read_to_string(&mut stats_str).unwrap();
+
+    let stats: Vec<usize> = stats_str.split_whitespace()
+        .enumerate()
+        .filter(|&(i, _s)| i % 2 != 0)
+        .map(|(_i, s)| s)
+        .map(|s| usize::from_str(s).unwrap())
+        .collect();
+    assert_eq!(stats.len(), 7);
+
+    Ok(ProcIo {
+        rchar: stats[0],
+        wchar: stats[1],
+        syscr: stats[2],
+        syscw: stats[3],
+        read_bytes: stats[4],
+        write_bytes: stats[5],
+        cancelled_write_bytes: stats[6],
+    })
+}
+
 #[cfg(test)]
 mod test {
     use std::process::Command;
@@ -112,6 +146,21 @@ mod test {
         assert!(stats.is_ok());
 
         let stats = process_statm("self".to_pid());
+        assert!(stats.is_ok());
+    }
+
+    #[test]
+    fn test_proc_io() {
+        let id = Command::new("sh")
+            .arg("-c")
+            .arg("sleep 1")
+            .spawn()
+            .unwrap_or_else(|e| { panic!("failed to execute process: {}", e) }).id();
+
+        let stats = process_io(id.to_pid());
+        assert!(stats.is_ok());
+
+        let stats = process_io("self".to_pid());
         assert!(stats.is_ok());
     }
 }
