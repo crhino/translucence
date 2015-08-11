@@ -10,6 +10,7 @@ extern crate serde_json;
 mod proc_fs;
 
 use proc_fs::stats::*;
+use proc_fs::kernel::*;
 use proc_fs::ToPid;
 use iron::{Iron, IronResult, Request, Response};
 use router::Router;
@@ -28,10 +29,18 @@ fn proc_io_handler(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with(serialized))
 }
 
+fn proc_stack_handler(req: &mut Request) -> IronResult<Response> {
+    let ref pid = req.extensions.get::<Router>().unwrap().find("pid").unwrap_or("/");
+    let stack_trace = process_stack((*pid).to_pid()).unwrap();
+    let serialized = serde_json::to_string(&stack_trace).unwrap();
+    Ok(Response::with(serialized))
+}
+
 fn main() {
     let mut router = Router::new();
     router.get("/proc/:pid/statm", proc_statm_handler);
     router.get("/proc/:pid/io", proc_io_handler);
+    router.get("/proc/:pid/stack", proc_stack_handler);
 
     Iron::new(router).http("localhost:3000").unwrap();
 }

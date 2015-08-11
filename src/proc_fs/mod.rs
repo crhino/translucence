@@ -1,4 +1,5 @@
 pub mod stats;
+pub mod kernel;
 
 pub trait ToPid {
     fn to_pid(&self) -> String;
