@@ -4,8 +4,12 @@ version = "0.1.0"
 authors = ["crhino <piraino.chris@gmail.com>"]
 
 [dependencies]
+transit = "*"
+
 iron = "*"
 router = "*"
+
+time = "*"
 
 serde = "*"
 serde_json = "*"
