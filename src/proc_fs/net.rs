@@ -1,9 +1,28 @@
 use std::fs::File;
 use std::string::String;
+use std::str::FromStr;
 use std::io::{self, Read};
 use std::collections::HashMap;
 
-pub fn process_tcp<'a>() -> io::Result<HashMap<String, String>> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TcpStat {
+    rto_algorithm: i8,
+    rto_min: isize,
+    rto_max: isize,
+    max_conn: isize, // -1 means dynamically determined
+    active_opens: usize,
+    passive_opens: usize,
+    attempt_fails: usize,
+    establish_resets: usize,
+    current_establish: usize,
+    segments_received: usize,
+    segments_sent: usize,
+    segments_retransmitted: usize,
+    segments_errors_received: usize,
+    resets_sent: usize,
+}
+
+pub fn process_tcp<'a>() -> io::Result<TcpStat> {
     let mut f = try!(File::open("/proc/net/snmp"));
     let mut snmp = String::new();
     let _n = f.read_to_string(&mut snmp).unwrap();
@@ -14,15 +33,28 @@ pub fn process_tcp<'a>() -> io::Result<HashMap<String, String>> {
         .map(|s| &s[5..])
         .collect::<Vec<&str>>().into_iter();
 
-    let names = tcp.next().unwrap();
-    let values = tcp.next().unwrap();
-    let mut hash = HashMap::new();
+    let _names = tcp.next().unwrap();
+    let values = tcp.next().unwrap().split_whitespace().collect::<Vec<&str>>();
+    assert_eq!(values.len(), 15);
 
-    for (k, v) in names.split_whitespace().zip(values.split_whitespace()) {
-        hash.insert(String::from(k), String::from(v));
-    }
+    let stats = TcpStat{
+        rto_algorithm: i8::from_str(values[0]).unwrap(),
+        rto_min: isize::from_str(values[1]).unwrap(),
+        rto_max: isize::from_str(values[2]).unwrap(),
+        max_conn: isize::from_str(values[3]).unwrap(),
+        active_opens: usize::from_str(values[4]).unwrap(),
+        passive_opens: usize::from_str(values[5]).unwrap(),
+        attempt_fails: usize::from_str(values[6]).unwrap(),
+        establish_resets: usize::from_str(values[7]).unwrap(),
+        current_establish: usize::from_str(values[8]).unwrap(),
+        segments_received: usize::from_str(values[9]).unwrap(),
+        segments_sent: usize::from_str(values[10]).unwrap(),
+        segments_retransmitted: usize::from_str(values[11]).unwrap(),
+        segments_errors_received: usize::from_str(values[12]).unwrap(),
+        resets_sent: usize::from_str(values[13]).unwrap(),
+    };
 
-    Ok(hash)
+    Ok(stats)
 }
 
 #[cfg(test)]

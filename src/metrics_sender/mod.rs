@@ -59,7 +59,6 @@ impl MetricSender {
             data: data,
         };
         let serialized = serde_json::to_string(&pkt) .unwrap();
-        println!("{:?}", serialized);
         self.transit.send_to(&serialized, addr)
     }
 }
