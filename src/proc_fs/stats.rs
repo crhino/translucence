@@ -61,7 +61,7 @@ struct ProcStat {
     exit_code: usize, // thread's exit status
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct ProcStatm {
     size: usize, // total program size
     resident: usize, // resident set size

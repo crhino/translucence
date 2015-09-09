@@ -2,9 +2,8 @@ use std::fs::File;
 use std::string::String;
 use std::str::FromStr;
 use std::io::{self, Read};
-use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct TcpStat {
     rto_algorithm: i8,
     rto_min: isize,
@@ -59,9 +58,7 @@ pub fn process_tcp<'a>() -> io::Result<TcpStat> {
 
 #[cfg(test)]
 mod test {
-    use std::process::Command;
     use proc_fs::net::*;
-    use proc_fs::ToPid;
 
     #[test]
     fn test_proc_stack() {
