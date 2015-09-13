@@ -16,6 +16,12 @@ pub struct MetricPacket {
     data: Metric,
 }
 
+impl MetricPacket {
+    pub fn origin(&self) -> &str {
+        self.origin.as_str()
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Metric {
     Network(TcpStat),
@@ -102,7 +108,6 @@ mod test {
         let res = metric_sender.send_to(data.clone(), listen_addr);
         assert!(res.is_ok());
         let res = listener.recv_from();
-        println!("{:?}", res);
         assert!(res.is_ok());
         let (net_data, _addr): (MetricPacket, _) = res.unwrap();
         assert_eq!(data, net_data.data);
