@@ -5,6 +5,7 @@ authors = ["crhino <piraino.chris@gmail.com>"]
 
 [dependencies]
 transit = { version = "*", features = ["json_serialization"] }
+ferrous_threads = "*"
 
 iron = "*"
 router = "*"
@@ -14,3 +15,7 @@ time = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"
+
+docopt = "*"
+docopt_macros = "*"
+rustc-serialize = "*"
