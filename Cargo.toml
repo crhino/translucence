@@ -7,6 +7,9 @@ authors = ["crhino <piraino.chris@gmail.com>"]
 transit = { version = "*", features = ["json_serialization"] }
 ferrous_threads = "*"
 
+log = "*"
+env_logger = "*"
+
 iron = "*"
 router = "*"
 

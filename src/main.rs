@@ -3,6 +3,9 @@
 #![feature(convert, result_expect)]
 #![plugin(docopt_macros)]
 
+#[macro_use] extern crate log;
+extern crate env_logger;
+
 extern crate iron;
 extern crate router;
 
@@ -45,11 +48,14 @@ use std::error::Error;
 use std::str::FromStr;
 
 fn main() {
+    env_logger::init().unwrap();
     let config: Config = Config::docopt().decode().unwrap_or_else(|e| e.exit());
     let mut pool = ThreadPool::new(2, 2);
 
     let  router_thread = pool.thread().expect("Could not request router thread");
     router_thread.start(Box::new(move || {
+        debug!("Starting router thread...");
+
         let mut router = Router::new();
         router.get("/proc/:pid/statm", proc_statm_handler);
         router.get("/proc/:pid/io", proc_io_handler);
@@ -57,11 +63,15 @@ fn main() {
         router.get("/net/tcpstats", proc_tcp_handler);
 
         Iron::new(router).http("localhost:3000").unwrap();
+
+        debug!("Router thread finished");
     })).expect("Could not start router thread");
 
     let  metrics_thread = pool.thread().expect("Could not request metrics thread");
     metrics_thread.start(Box::new(move || {
+        debug!("Starting metrics thread...");
         metrics_reporting(config);
+        debug!("Metrics thread finished");
     })).expect("Could not start metrics thread");
 
     router_thread.join().expect("Failed to join router thread");
@@ -105,10 +115,12 @@ fn metrics_reporting(config: Config) {
     };
 
     loop {
+        debug!("Attempting to send metrics...");
+
         let tcp = match process_tcp() {
             Ok(t) => t,
             Err(ref e) => {
-                println!("Error getting tcp info: {}", e.description());
+                warn!("Error getting tcp info: {}", e);
                 continue
             },
         };
@@ -116,8 +128,10 @@ fn metrics_reporting(config: Config) {
         let data = Metric::Network(tcp);
         match metrics_sender.send_to(data, metric_addr) {
             Ok(_) => {},
-            Err(ref e) => println!("Error sending metrics: {}", e.description()),
+            Err(ref e) => warn!("Error sending metrics: {}", e),
         }
+
+        debug!("metrics sent");
         ::std::thread::sleep_ms(publish_interval * 1000);
     }
 }
