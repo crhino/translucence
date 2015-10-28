@@ -7,6 +7,7 @@ use std::str::FromStr;
 use std::io::{self, Read};
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct ProcStat {
     pid: isize,
     command: String,

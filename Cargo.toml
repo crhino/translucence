@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["crhino <piraino.chris@gmail.com>"]
 
 [dependencies]
+marid = ">=0.0.2"
 transit = { version = "*", features = ["json_serialization"] }
-ferrous_threads = "*"
 
 log = "*"
 env_logger = "*"
@@ -22,3 +22,7 @@ serde_macros = "*"
 docopt = "*"
 docopt_macros = "*"
 rustc-serialize = "*"
+
+[dev-dependencies]
+chan = ">=0.1.14"
+ferrous_threads = ">=0.1.1"
